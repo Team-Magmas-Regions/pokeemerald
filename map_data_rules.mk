@@ -3,6 +3,7 @@
 # Inputs
 MAPS_DIR = $(DATA_ASM_SUBDIR)/maps
 LAYOUTS_DIR = $(DATA_ASM_SUBDIR)/layouts
+TILESETS_DIR = $(DATA_ASM_SUBDIR)/tilesets
 
 # Outputs
 MAPS_OUTDIR := $(MAPS_DIR)
@@ -20,37 +21,48 @@ MAP_HEADERS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/header.inc,$(MAP_DIRS))
 MAP_JSONS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/map.json,$(MAP_DIRS))
 
 # The following vars and build targets are optionally used only if using json for mapgrid data
-LAYOUTS_MAP_BINS := $(wildcard $(LAYOUTS_DIR)/*/map.bin)
-LAYOUTS_BORDER_BINS := $(wildcard $(LAYOUTS_DIR)/*/border.bin)
+LAYOUTS_DIRS := $(dir $(wildcard $(LAYOUTS_DIR)/*/))
+LAYOUTS_MAP_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.bin,$(LAYOUTS_DIRS))
+LAYOUTS_BORDER_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.bin,$(LAYOUTS_DIRS))
 
 # The following vars and build targets are optionally used only if using json for metatiles data
-TILESETS_METATILES_BINS := $(wildcard $(DATA_ASM_SUBDIR)/tilesets/primary/*/metatiles.bin) $(wildcard $(DATA_ASM_SUBDIR)/tilesets/secondary/*/metatiles.bin)
-TILESETS_METATILE_ATTRIBUTES_BINS := $(wildcard $(DATA_ASM_SUBDIR)/tilesets/primary/*/metatile_attributes.bin) $(wildcard $(DATA_ASM_SUBDIR)/tilesets/secondary/*/metatile_attributes.bin)
+TILESETS_DIRS := $(dir $(wildcard $(TILESETS_DIR)/*/))
+TILESETS_METATILES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.bin,$(TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/,$(TILESETS_DIR)/secondary/%/metatiles.bin,$(TILESETS_DIRS))
+TILESETS_METATILE_ATTRIBUTES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatile_attributes.bin,$(TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/,$(TILESETS_DIR)/secondary/%/metatile_attributes.bin,$(TILESETS_DIRS))
 
 ifeq ($(OPTION_LAYOUT_MAPGRIDS_USE_JSON),true)
-LAYOUTS_MAP_JSONS := $(wildcard $(LAYOUTS_DIR)/*/map.json)
-LAYOUTS_BORDER_JSONS := $(wildcard $(LAYOUTS_DIR)/*/border.json)
+LAYOUTS_MAP_JSONS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.json,$(LAYOUTS_DIR))
+LAYOUTS_BORDER_JSONS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.json,$(LAYOUTS_DIR))
 
-mapgrid-bins-generated: $(LAYOUTS_BORDER_BINS) $(LAYOUTS_MAP_BINS)
 $(LAYOUTS_DIR)/%/border.bin: $(LAYOUTS_DIR)/%/border.json
+	@echo "$(JSON2BIN) mapgrid $<"
 	$(JSON2BIN) mapgrid $<
 $(LAYOUTS_DIR)/%/map.bin: $(LAYOUTS_DIR)/%/map.json
+	@echo "$(JSON2BIN) mapgrid $<"
 	$(JSON2BIN) mapgrid $<
+
+mapgrid-bins-generated: $(LAYOUTS_BORDER_BINS) $(LAYOUTS_MAP_BINS) $(LAYOUTS_MAP_JSONS) $(LAYOUTS_BORDER_JSONS)
+	@echo "mapgrid-bins-generated $(LAYOUTS_BORDER_BINS) $(LAYOUTS_MAP_BINS)"
+
+$(LAYOUTS_DIR)/layouts.json: $(mapgrid-bins-generated)
 endif
 
 ifeq ($(OPTION_TILESET_METATILES_USE_JSON),true)
 TILESETS_METATILES_JSONS := $(wildcard $(DATA_ASM_SUBDIR)/tilesets/primary/*/metatiles.json) $(wildcard $(DATA_ASM_SUBDIR)/tilesets/secondary/*/metatiles.json)
 TILESETS_METATILE_ATTRIBUTES_JSONS := $(wildcard $(DATA_ASM_SUBDIR)/tilesets/primary/*/metatile_attributes.json) $(wildcard $(DATA_ASM_SUBDIR)/tilesets/secondary/*/metatile_attributes.json)
 
-metatile-bins-generated: $(TILESETS_METATILES_BINS) $(TILESETS_METATILE_ATTRIBUTES_BINS)
 %/metatiles.bin: %/metatiles.json
+	@echo "$(JSON2BIN) metatiles $<"
 	$(JSON2BIN) metatiles $<
 %/metatile_attributes.bin: %/metatile_attributes.json
+	@echo "$(JSON2BIN) metatile_attributes $<"
 	$(JSON2BIN) metatile_attributes $<
-endif
 
-# Note the mapgrid-bins-generated and metatile-bins-generated only get created when the option is toggled
-$(DATA_ASM_SUBDIR)/maps.s: $(mapgrid-bins-generated) $(metatile-bins-generated) 
+metatile-bins-generated: $(TILESETS_METATILES_BINS) $(TILESETS_METATILE_ATTRIBUTES_BINS)
+	@echo "metatile-bins-generated $(TILESETS_METATILES_BINS) $(TILESETS_METATILE_ATTRIBUTES_BINS)"
+
+$(DATA_ASM_BUILDDIR)/tilesets.o: $(metatile-bins-generated)
+endif
 
 $(DATA_ASM_BUILDDIR)/maps.o: $(DATA_ASM_SUBDIR)/maps.s $(LAYOUTS_DIR)/layouts.inc $(LAYOUTS_DIR)/layouts_table.inc $(MAPS_DIR)/headers.inc $(MAPS_DIR)/groups.inc $(MAPS_DIR)/connections.inc $(MAP_CONNECTIONS) $(MAP_HEADERS)
 	$(PREPROC) $< charmap.txt | $(CPP) -I include - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
@@ -64,7 +76,7 @@ $(MAPS_OUTDIR)/%/header.inc $(MAPS_OUTDIR)/%/events.inc $(MAPS_OUTDIR)/%/connect
 $(MAPS_OUTDIR)/connections.inc $(MAPS_OUTDIR)/groups.inc $(MAPS_OUTDIR)/events.inc $(MAPS_OUTDIR)/headers.inc $(INCLUDECONSTS_OUTDIR)/map_groups.h: $(MAPS_DIR)/map_groups.json
 	$(MAPJSON) groups emerald $< $(MAPS_OUTDIR) $(INCLUDECONSTS_OUTDIR)
 
-$(LAYOUTS_OUTDIR)/layouts.inc $(LAYOUTS_OUTDIR)/layouts_table.inc $(INCLUDECONSTS_OUTDIR)/layouts.h: $(LAYOUTS_DIR)/layouts.json
+$(LAYOUTS_OUTDIR)/layouts.inc $(LAYOUTS_OUTDIR)/layouts_table.inc $(INCLUDECONSTS_OUTDIR)/layouts.h: $(LAYOUTS_DIR)/layouts.json $(LAYOUTS_MAP_BINS) $(LAYOUTS_BORDER_BINS)
 	$(MAPJSON) layouts emerald $< $(LAYOUTS_OUTDIR) $(INCLUDECONSTS_OUTDIR)
 
 $(DATA_SRC_SUBDIR)/heal_locations.h: $(MAP_JSONS)
