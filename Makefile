@@ -256,14 +256,10 @@ clean-assets:
 	find sound -iname '*.bin' -exec rm {} +
 	find . \( -iname '*.1bpp' -o -iname '*.4bpp' -o -iname '*.8bpp' -o -iname '*.gbapal' -o -iname '*.lz' -o -iname '*.rl' -o -iname '*.latfont' -o -iname '*.hwjpnfont' -o -iname '*.fwjpnfont' \) -exec rm {} +
 	find $(DATA_ASM_SUBDIR)/maps \( -iname 'connections.inc' -o -iname 'events.inc' -o -iname 'header.inc' \) -exec rm {} +
-# Clear the layouts/map.bin and layouts/border.bin files if using json
-ifeq ($(OPTION_LAYOUT_MAPGRIDS_USE_JSON),true)
+# Clear the layouts/map.bin and layouts/border.bin files to be recompiled with json
 	find $(DATA_ASM_SUBDIR)/layouts \( -iname 'map.bin' -o -iname 'border.bin' \) -exec rm {} +
-endif
-# Clear the metatiles.bin and metatile_attributes.bin files if using json
-ifeq ($(OPTION_TILESET_METATILES_USE_JSON),true)
+# Clear the metatiles.bin and metatile_attributes.bin files to be recompiled with json
 	find $(DATA_ASM_SUBDIR)/tilesets \( -iname 'metatiles.bin' -o -iname 'metatile_attributes.bin' \) -exec rm {} +
-endif
 
 
 tidy: tidynonmodern tidymodern

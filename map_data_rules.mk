@@ -25,7 +25,6 @@ LAYOUTS_DIRS := $(wildcard $(LAYOUTS_DIR)/*/)
 LAYOUTS_MAP_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.bin,$(LAYOUTS_DIRS))
 LAYOUTS_BORDER_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.bin,$(LAYOUTS_DIRS))
 
-ifeq ($(OPTION_LAYOUT_MAPGRIDS_USE_JSON),true)
 LAYOUTS_MAP_JSONS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.json,$(LAYOUTS_DIR))
 LAYOUTS_BORDER_JSONS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.json,$(LAYOUTS_DIR))
 
@@ -40,7 +39,6 @@ mapgrid-bins-generated: $(LAYOUTS_MAP_BINS) $(LAYOUTS_BORDER_BINS)
 	@echo "mapgrid-bins-generated $(LAYOUTS_BORDER_BINS) $(LAYOUTS_MAP_BINS)"
 
 $(LAYOUTS_DIR)/layouts.json: $(mapgrid-bins-generated)
-endif
 
 # The following vars and build targets are optionally used only if using json for metatiles data
 PRIMARY_TILESETS_DIRS := $(wildcard $(TILESETS_DIR)/primary/*/)
@@ -48,7 +46,6 @@ SECONDARY_TILESETS_DIRS := $(wildcard $(TILESETS_DIR)/secondary/*/)
 TILESETS_METATILES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.bin,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatiles.bin,$(SECONDARY_TILESETS_DIRS))
 TILESETS_METATILE_ATTRIBUTES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatile_attributes.bin,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatile_attributes.bin,$(SECONDARY_TILESETS_DIRS))
 
-ifeq ($(OPTION_TILESET_METATILES_USE_JSON),true)
 TILESETS_METATILES_JSONS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.json,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatiles.json,$(SECONDARY_TILESETS_DIRS))
 TILESETS_METATILE_ATTRIBUTES_JSONS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatile_attributes.json,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatile_attributes.json,$(SECONDARY_TILESETS_DIRS))
 
@@ -63,7 +60,6 @@ metatile-bins-generated: $(TILESETS_METATILES_BINS) $(TILESETS_METATILE_ATTRIBUT
 	@echo "metatile-bins-generated $(TILESETS_METATILES_BINS) $(TILESETS_METATILE_ATTRIBUTES_BINS)"
 
 $(DATA_ASM_BUILDDIR)/tilesets.o: $(metatile-bins-generated)
-endif
 
 $(DATA_ASM_BUILDDIR)/maps.o: $(DATA_ASM_SUBDIR)/maps.s $(LAYOUTS_DIR)/layouts.inc $(LAYOUTS_DIR)/layouts_table.inc $(MAPS_DIR)/headers.inc $(MAPS_DIR)/groups.inc $(MAPS_DIR)/connections.inc $(MAP_CONNECTIONS) $(MAP_HEADERS)
 	$(PREPROC) $< charmap.txt | $(CPP) -I include - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
@@ -93,3 +89,7 @@ run-layout-mapgrids-bin-to-json:
 run-tileset-metatiles-bin-to-json:
 	$(BIN2JSON) rse metatiles $(TILESETS_METATILES_BINS)
 	$(BIN2JSON) rse metatile_attributes $(TILESETS_METATILE_ATTRIBUTES_BINS)
+
+.PHONY: migrate-maps-to-json
+	run-layout-mapgrids-bin-to-json
+	run-tileset-metatiles-bin-to-json
