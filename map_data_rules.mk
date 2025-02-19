@@ -26,9 +26,10 @@ LAYOUTS_MAP_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.bin,$(LAYO
 LAYOUTS_BORDER_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.bin,$(LAYOUTS_DIRS))
 
 # The following vars and build targets are optionally used only if using json for metatiles data
-TILESETS_DIRS := $(dir $(wildcard $(TILESETS_DIR)/*/))
-TILESETS_METATILES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.bin,$(TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatiles.bin,$(TILESETS_DIRS))
-TILESETS_METATILE_ATTRIBUTES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatile_attributes.bin,$(TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatile_attributes.bin,$(TILESETS_DIRS))
+PRIMARY_TILESETS_DIRS := $(dir $(wildcard $(TILESETS_DIR)/primary/*/))
+SECONDARY_TILESETS_DIRS := $(dir $(wildcard $(TILESETS_DIR)/secondary/*/))
+TILESETS_METATILES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.bin,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatiles.bin,$(SECONDARY_TILESETS_DIRS))
+TILESETS_METATILE_ATTRIBUTES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatile_attributes.bin,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatile_attributes.bin,$(SECONDARY_TILESETS_DIRS))
 
 ifeq ($(OPTION_LAYOUT_MAPGRIDS_USE_JSON),true)
 LAYOUTS_MAP_JSONS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.json,$(LAYOUTS_DIR))
