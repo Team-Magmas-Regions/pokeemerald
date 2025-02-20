@@ -20,7 +20,6 @@ MAP_EVENTS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/events.inc,$(MAP_DIRS))
 MAP_HEADERS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/header.inc,$(MAP_DIRS))
 MAP_JSONS := $(patsubst $(MAPS_DIR)/%/,$(MAPS_DIR)/%/map.json,$(MAP_DIRS))
 
-# The following vars and build targets are optionally used only if using json for mapgrid data
 LAYOUTS_DIRS := $(wildcard $(LAYOUTS_DIR)/*/)
 LAYOUTS_MAP_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/map.bin,$(LAYOUTS_DIRS))
 LAYOUTS_BORDER_BINS := $(patsubst $(LAYOUTS_DIR)/%/,$(LAYOUTS_DIR)/%/border.bin,$(LAYOUTS_DIRS))
@@ -40,7 +39,6 @@ mapgrid-bins-generated: $(LAYOUTS_MAP_BINS) $(LAYOUTS_BORDER_BINS)
 
 $(LAYOUTS_DIR)/layouts.json: $(mapgrid-bins-generated)
 
-# The following vars and build targets are optionally used only if using json for metatiles data
 PRIMARY_TILESETS_DIRS := $(wildcard $(TILESETS_DIR)/primary/*/)
 SECONDARY_TILESETS_DIRS := $(wildcard $(TILESETS_DIR)/secondary/*/)
 TILESETS_METATILES_BINS := $(patsubst $(TILESETS_DIR)/primary/%/,$(TILESETS_DIR)/primary/%/metatiles.bin,$(PRIMARY_TILESETS_DIRS)) $(patsubst $(TILESETS_DIR)/secondary/%/,$(TILESETS_DIR)/secondary/%/metatiles.bin,$(SECONDARY_TILESETS_DIRS))
@@ -90,6 +88,3 @@ run-tileset-metatiles-bin-to-json:
 	$(BIN2JSON) rse metatiles $(TILESETS_METATILES_BINS)
 	$(BIN2JSON) rse metatile_attributes $(TILESETS_METATILE_ATTRIBUTES_BINS)
 
-.PHONY: migrate-maps-to-json
-	run-layout-mapgrids-bin-to-json
-	run-tileset-metatiles-bin-to-json
